@@ -1,0 +1,8 @@
+; $Id$
+name = UC Ticket
+description = A customer service and ticketing module for Ubercart.
+dependencies[] = uc_order
+dependencies[] = uc_store
+dependencies[] = contact
+package = Ubercart - extra
+core = 6.x

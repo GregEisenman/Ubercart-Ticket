@@ -1,0 +1,21 @@
+/* $Id$ */ 
+
+h3.ticket_title { font-weight:bold; padding: 10px 0px 10px 0px;  }
+span.ticket_date { font-style:italic; font-size:0.8em;  }
+div#info_box { float:right; width:25%; }
+div.ticket_box { float:left; width:70%;  }
+
+#form_functions {  width:80px;  float:right; clear:none; font-weight:bold; text-align:right; }
+#form_functions div {   }
+
+#form_functions img {  padding-right:5px;  }
+
+form#uc-ticket-delete-ticket-form span { display:block;  }
+
+#edit-category-wrapper, #edit-status-wrapper, #edit-order-id-wrapper, form#uc-ticket-view-controls-form #edit-submit { float:left; padding-right: .8em; margin: 0.1em;  }
+form#uc-ticket-view-controls-form #edit-submit { margin-top:10px; clear:both;}
+#edit-email-wrapper { clear:left; }
+
+
+
+

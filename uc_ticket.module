@@ -1,0 +1,770 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ * A UC Ticket and ticketing module for Ubercart.
+ */
+ 
+/************
+**
+** hook_perm()
+**
+************/
+
+function uc_ticket_perm() {
+
+  return array('administer UC Ticket module', 'view tickets', 'edit tickets', 'delete tickets', 'create tickets');
+
+}
+
+/************
+**
+** hook_init()
+**
+************/
+
+function uc_ticket_init() {
+
+  if (arg(0) == 'admin' && arg(1) == 'store' && arg(2) == 'ticket') {
+    drupal_add_css(drupal_get_path('module', 'uc_ticket') .'/uc_ticket.css', 'module', 'all', FALSE);
+    drupal_add_js(drupal_get_path('module', 'uc_ticket') .'/uc_ticket.js');
+  }
+
+}
+
+/************
+**
+** hook_menu()
+**
+************/
+
+function uc_ticket_menu() {
+
+  $items = array();
+
+  $items['admin/store/settings/ticket'] = array(
+    'title' => 'UC Ticket settings',
+    'description' => 'Various settings for the UC Ticket module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_admin_settings_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/settings/ticket/overview'] = array(
+    'title' => 'Overview',
+    'description' => 'Various settings for the UC Ticket module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_admin_settings_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'weight' => 0,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/settings/ticket/email'] = array(
+    'title' => 'Email Settings',
+    'description' => 'Change settings related to the email accounts used by UC Ticket.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_admin_email_accounts_view_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/settings/ticket/status'] = array(
+    'title' => 'Statuses',
+    'description' => 'Ticket status form.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_status_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'weight' => 2,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/settings/ticket/template'] = array(
+    'title' => 'Templates',
+    'description' => 'Ticket template form.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_template_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'weight' => 3,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/settings/ticket/signature'] = array(
+    'title' => 'Your Signature',
+    'description' => 'Signature form.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_signature_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'weight' => 4,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/settings/ticket/template/add'] = array(
+    'title' => 'Add Template',
+    'description' => 'Add a template.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_template_add_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/settings/ticket/template/edit/%'] = array(
+    'description' => 'Edit template',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_template_edit_form', 6),
+    'access arguments' => array('administer UC Ticket module'),
+    'type' => MENU_CALLBACK,
+    'file' => 'uc_ticket.admin.inc',    
+    'title' => 'Edit template',
+  );
+
+  $items['admin/store/settings/ticket/email/overview'] = array(
+    'title' => 'Accounts Overview',
+    'description' => 'View all of the email accounts currently set up.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_admin_email_accounts_view_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'weight' => 0,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/settings/ticket/email/add'] = array(
+    'title' => 'Add Account',
+    'description' => 'Add an email account.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_admin_email_accounts_add_form'),
+    'access arguments' => array('administer UC Ticket module'),
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/ticket'] = array(
+    'title' => 'UC Ticket',
+    'description' => 'Displays a list of tickets.',
+    'page callback' => 'uc_ticket_list_tickets',
+    'access arguments' => array('view tickets'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/ticket/list'] = array(
+    'title' => 'Ticket List',
+    'description' => 'Displays a list of tickets.',
+    'page callback' => 'uc_ticket_list_tickets',
+    'access arguments' => array('view tickets'),
+    'weight' => 0,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+  );
+
+  $items['admin/store/ticket/create'] = array(
+    'description' => 'Create ticket',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_create_ticket_form'),
+    'access arguments' => array('create tickets'),
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+    'title' => 'Create Ticket',
+  );
+
+  $items['admin/store/ticket/search'] = array(
+    'description' => 'Search tickets',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_search_form'),
+    'access arguments' => array('view tickets'),
+    'weight' => 2,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'uc_ticket.admin.inc',
+    'title' => 'Search Tickets',
+  );
+
+  $items['admin/store/ticket/followup/%'] = array(
+    'description' => 'Create Followup',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_create_followup_form', 4),
+    'access arguments' => array('create tickets'),
+    'type' => MENU_CALLBACK,
+    'file' => 'uc_ticket.admin.inc',    
+    'title callback' => '_uc_ticket_view_page_title',
+    'title arguments' => array(4), 
+  );
+
+  $items['admin/store/ticket/%'] = array(
+    'description' => 'A page diaplying a ticket.',
+    'page callback' => 'uc_ticket_display_ticket',
+    'page arguments' => array(3),
+    'access arguments' => array('view tickets'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'uc_ticket.admin.inc',
+    'title callback' => '_uc_ticket_view_page_title',
+    'title arguments' => array(3), 
+  );
+
+  $items['admin/store/ticket/%/delete'] = array(
+    'description' => 'Delete ticket confirmation.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('uc_ticket_delete_ticket_form', 3),
+    'access arguments' => array('delete tickets'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'uc_ticket.admin.inc',
+    'title callback' => '_uc_ticket_view_page_title',
+    'title arguments' => array(3), 
+  );
+
+  $items['uc_ticket_fetch_template/%'] = array(
+    'title' => 'Foo',
+		'page callback' => 'uc_ticket_get_template_text',
+    'access arguments' => array('create tickets'),
+    'type' => MENU_CALLBACK,
+    'page arguments' => array(1),
+  );
+
+  return $items;
+
+}
+
+/************
+**
+** private function
+** sets the page title on a ticket page
+**
+************/
+
+
+function _uc_ticket_view_page_title($ticket_id) {
+
+  $SQL = "SELECT title FROM {uc_ticket_tickets} WHERE ticket_id = %d"; 
+  $title = db_result(db_query($SQL, $ticket_id)); 
+
+  return 'Ticket: ' . $ticket_id . ' - ' . $title;
+
+}
+
+/************
+**
+** hook_form_alter()
+**
+************/
+
+function uc_ticket_form_alter(&$form, $form_state, $form_id) {
+
+  switch ($form_id) {
+
+    //add some custom fields to the sitewide contact form
+    case 'contact_mail_page':
+
+      global $user;
+      $order_ids = array();
+
+      if ($user->uid != 0) {
+        $SQL = "SELECT order_id, created, order_total FROM {uc_orders} WHERE uid = %d ORDER BY created desc";
+        $result = db_query($SQL, $user->uid);
+        $order_ids[0] = 'Please select an order...';
+        while ($line = db_fetch_object($result)) {
+          $order_ids[$line->order_id] = '#' . $line->order_id . ' - ' . date('m/d/Y g:i A', $line->created) . ' - ' . uc_currency_format($line->order_total);
+        }
+      } else {
+        $order_ids[0] = 'Please login to select an order';
+      }
+      
+      $form['order'] = array(
+        '#type' => 'select',
+        '#title' => t('Order ID'),
+        '#default_value' => $order_ids[0],
+        '#options' => $order_ids,
+        '#description' => t('If this question is about a specific order, please <a href="' . base_path() . 'user/login?destination=contact">log in</a> if necessary and select it from the dropdown above.'),
+      );
+
+      $order = array('contact_information', 'name', 'mail', 'order', 'cid', 'subject', 'message', 'copy', 'submit');
+      foreach($order as $key => $field) {
+        $form[$field]['#weight'] = $key;
+      }
+
+    break;
+
+  }
+
+}
+
+/************
+**
+** hook_mail_alter()
+**
+************/
+
+function uc_ticket_mail_alter(&$message) {
+
+  if ($message['id'] == 'contact_page_mail') {
+    if ($message['params']['order'] != 0) {
+      $old_subject = explode(']', $message['subject'], 2);
+      $message['subject'] = $old_subject[0] . '][O#' . $message['params']['order'] . ']' . $old_subject[1];
+    }
+  }
+
+}
+
+/************
+**
+** hook_cron()
+**
+************/
+
+function uc_ticket_cron() {
+
+  //get email accounts and fetch mail
+  $SQL = "SELECT * FROM {uc_ticket_email}";
+  $result = db_query($SQL);
+  while ($account = db_fetch_object($result)) {
+    _uc_ticket_fetch_mail($account);
+  }
+
+}
+
+/************
+**
+** private function
+** fetches all mail for an email account
+**
+************/
+
+function _uc_ticket_fetch_mail($account) {
+
+  $conn = imap_open('{' . $account->server . ':110/' . $account->protocol . '/novalidate-cert}INBOX', $account->username, $account->password);
+  if ($conn) {
+    $num_messages = imap_num_msg($conn);
+    if ($num_messages > 0) {
+      for ($i = 1; $i <= $num_messages; $i++) {
+        $header = imap_headerinfo($conn, $i);
+        //find out if we should create a new ticket
+        //first we look for ticket number in the subject
+        $subject = $header->subject;
+        preg_match_all('/\[T#([0-9]*)\]/', $subject, $matches);
+        if ($matches[1][0]) {
+          //found a ticket number, but does this ticket exist?
+          $SQL = "SELECT created FROM {uc_ticket_tickets} WHERE ticket_id = %d";
+          $exists = db_result(db_query($SQL, $matches[1][0]));
+          if (!$exists) {
+            //ticket does not exist, we need to create new one
+            //this would happen on a false match, ie user entered a bad ticket
+            //number directly into subject line
+            _uc_ticket_create_ticket_from_mail($header, $conn);
+          } else {
+            //associate this email with a ticket
+            _uc_ticket_create_followup_from_mail($header, $conn, $matches[1][0]);
+          }
+        } else {
+          //didn't find a ticket number, so we create one
+          _uc_ticket_create_ticket_from_mail($header, $conn);
+        }
+        imap_delete($conn, $i);
+      }
+    }
+  imap_expunge($conn);
+  imap_close($conn);
+  }
+
+}
+
+/************
+**
+** private function
+** creates a new ticket from an incoming email
+**
+************/
+
+function _uc_ticket_create_ticket_from_mail($header, $conn) {
+
+  //find out if we need to associate this ticket with an order
+  $subject = $header->subject;
+  preg_match_all('/\[O#([0-9]*)\]/', $subject, $matches);
+  $clean_subject = preg_replace('`\[[^\]]*\]`', '', $subject);
+  $order_id = $matches[1][0];
+  if (is_array($header->from)) {
+    $email = $header->from[0]->mailbox .'@'. $header->from[0]->host;
+  }
+  $raw_body = imap_fetchbody($conn, $header->Msgno, 1);
+  $structure = imap_fetchstructure($conn, $header->Msgno);
+  $body = uc_ticket_get_body($raw_body, $structure);
+  if ($order_id) {
+    $SQL = "SELECT uid FROM {uc_orders} WHERE order_id = %d";
+    $uid = db_result(db_query($SQL, $order_id));
+  }
+  //create ticket
+  $SQL = "INSERT INTO {uc_ticket_tickets} (created, uid, email, order_id, status, assigned_to, updated, title, category) VALUES (%d, %d, '%s', %d, %d, %d, %d, '%s', 1)";
+  db_query($SQL, $header->udate, $uid, $email, $order_id, 1, 0, $header->udate, $clean_subject);
+  $ticket_id = db_last_insert_id('uc_ticket_tickets', 'ticket_id');
+  //create followup data record
+  $SQL = "INSERT INTO {uc_ticket_tickets_data} (ticket_id, delta, created, email, subject, body) VALUES (%d, 0, %d, '%s', '%s', '%s')";
+  db_query($SQL, $ticket_id, $header->udate, $email, $clean_subject, $body);
+
+}
+
+/************
+**
+** private function
+** creates a new followup to a ticket from an incoming email
+**
+************/
+
+function _uc_ticket_create_followup_from_mail($header, $conn, $ticket_id) {
+
+  $subject = preg_replace('`\[[^\]]*\]`', '', $header->subject);
+  if (is_array($header->from)) {
+    $email = $header->from[0]->mailbox .'@'. $header->from[0]->host;
+  }
+  $raw_body = imap_fetchbody($conn, $header->Msgno, 1);
+  $structure = imap_fetchstructure($conn, $header->Msgno);
+  $body = uc_ticket_get_body($raw_body, $structure);
+  //get the highest delta plus 1
+  $SQL = "SELECT MAX(delta)+1 FROM {uc_ticket_tickets_data} WHERE ticket_id = %d";
+  $delta = db_result(db_query($SQL, $ticket_id));
+  //create followup data record
+  $SQL = "INSERT INTO {uc_ticket_tickets_data} (ticket_id, delta, created, email, subject, body) VALUES (%d, %d, %d, '%s', '%s', '%s')";
+  db_query($SQL, $ticket_id, $delta, $header->udate, $email, $subject, $body);
+  //update ticket updated and status field
+  $SQL = "UPDATE {uc_ticket_tickets} SET updated = %d, status = 1 WHERE ticket_id = %d";
+  db_query($SQL, $header->udate, $ticket_id);
+
+}
+
+/************
+**
+** returns an array of parent ticket and all child tickets sorted by date created
+**
+************/
+
+function uc_ticket_load_ticket_trail($ticket_id) {
+
+  $ticket_trail = new stdClass();
+
+  $SQL = "SELECT * FROM {uc_ticket_tickets} WHERE ticket_id = %d";
+  $result = db_query($SQL, $ticket_id);
+  $ticket = db_fetch_object($result);
+  $ticket_trail = $ticket;
+  $SQL = "SELECT * FROM {uc_ticket_tickets_data} WHERE ticket_id = %d ORDER BY created DESC";
+  $result = db_query($SQL, $ticket_id);
+
+  while ($row = db_fetch_object($result)) {
+    $ticket_trail->data[] = $row;
+  }
+
+  return $ticket_trail;
+
+}
+
+/************
+**
+** returns an array of statuses from uc_ticket_status
+**
+************/
+
+function uc_ticket_get_statuses() {
+
+  $SQL = "SELECT * FROM {uc_ticket_status}"; 
+  $result = db_query($SQL);
+  $statuses = array();
+  while ($line = db_fetch_object($result)) {
+    $statuses[$line->status_id] = $line->status_name;
+  }
+
+  return $statuses;
+
+}
+
+/************
+**
+** returns an array of categories from the contact table
+**
+************/
+
+function uc_ticket_get_categories() {
+
+  $result = db_query('SELECT cid, category FROM {contact} ORDER BY weight');
+  $categories = array();
+  while ($line = db_fetch_object($result)) {
+    $categories[$line->cid] = $line->category;
+  }
+
+  return $categories;
+
+}
+
+/************
+**
+** returns an array of tickets by user
+**
+************/
+
+function uc_ticket_get_tickets_by_user($uid) {
+
+  $result = db_query('SELECT ticket_id, created FROM {uc_ticket_tickets} ORDER BY created DESC');
+  $tickets = array();
+  while ($line = db_fetch_object($result)) {
+    $tickets[$line->ticket_id] = $line->ticket_id . ' - ' . date('m/d/Y g:i A', $line->created);
+  }
+
+  return $tickets;
+
+}
+
+/************
+**
+** returns a status name by status_id
+**
+************/
+
+function uc_ticket_get_status_name($status_id) {
+
+  $SQL = "SELECT status_name FROM {uc_ticket_status} WHERE status_id = %d";
+  $status = db_result(db_query($SQL, $status_id));
+
+  return $status;  
+
+}
+
+/************
+**
+** returns a category name by cid
+**
+************/
+
+function uc_ticket_get_category_name($category_id) {
+
+  $SQL = "SELECT category FROM {contact} WHERE cid = %d";
+  $category = db_result(db_query($SQL, $category_id));
+
+  return $category;  
+
+}
+
+/************
+**
+** returns an array of templates
+**
+************/
+
+function uc_ticket_get_templates() {
+
+  $result = db_query("SELECT * FROM {uc_ticket_templates}");
+  $templates = array();
+  while ($line = db_fetch_object($result)) {
+    $templates[$line->template_id] = t($line->template_name);
+  }
+
+  return $templates;
+
+}
+
+/************
+**
+** callback that returns an template text by template_id
+**
+************/
+
+function uc_ticket_get_template_text($template_id) {
+
+  $SQL = "SELECT template_text as text, template_subject as subject FROM {uc_ticket_templates} WHERE template_id = %d";
+  $result = db_query($SQL, $template_id);
+  $template = db_fetch_object($result);
+
+  return drupal_json(array('text' => t($template->text), 'subject' => t($template->subject)));
+
+}
+
+/************
+**
+** ubercart hook - hook_order_pane()
+**
+************/
+
+function uc_ticket_order_pane() {
+	
+  $panes[] = array(
+    'id' => 'issue_log',
+    'callback' => 'uc_ticket_order_issue_log',
+    'title' => t('Order Issues'),
+    'desc' => t(''),
+    'class' => 'abs-left',
+    'weight' => 5,
+    'show' => array('view'),
+  );
+	
+  return $panes;
+}
+
+/************
+**
+** Implementation of hook_theme()
+**
+************/
+
+function uc_ticket_theme() {
+  return array(
+    'uc_ticket_templates_table' => array(
+      'arguments' => array('form' => NULL),
+    ),
+    'uc_ticket_statuses_table' => array(
+      'arguments' => array('form' => NULL),
+    ),
+  );
+} 
+
+/************
+**
+** callback for issue log order pane
+**
+************/
+
+function uc_ticket_order_issue_log($op, $order) {
+
+  switch ($op) {
+    case 'view':
+      $output = '';
+      $links = array();
+      $SQL = "SELECT created, title, ticket_id, status FROM {uc_ticket_tickets} WHERE order_id = %d ORDER BY created DESC";
+      $result = db_query($SQL, $order->order_id);
+      while ($line = db_fetch_object($result)) {
+        $links[] = date('m/d/Y g:i A', $line->created) . ' - ' . l($line->title, 'admin/store/ticket/' . $line->ticket_id) . ' (' . uc_ticket_get_status_name($line->status) . ')';
+      }
+      $links[] = l(t('Click Here'), 'admin/store/ticket/create/' . $order->order_id) . ' to create a new ticket for this order.';
+      $output .= theme_item_list($links);
+    break;
+  }
+
+  return $output;
+}
+
+/************
+**
+** function for emailing customer a ticket
+**
+************/
+
+function uc_ticket_email_customer($ticket_id, $subject, $body) {
+
+  $SQL = "SELECT * FROM {uc_ticket_tickets} WHERE ticket_id = %d";
+  $result = db_query($SQL, $ticket_id);
+  $ticket = db_fetch_object($result);
+  
+  if ($ticket) {
+    $store_email = variable_get('uc_store_email', 'Store@example.com');
+    $to = $ticket->email;
+    $headers  = 'MIME-Version: 1.0' . "\r\n";
+    $headers .= 'Content-type: text/plain; charset=ISO-8859-1' . "\r\n";
+    $headers .= 'From: ' . $store_email . "\r\n";
+    $headers .= 'Reply-To: ' . $store_email . "\r\n";
+    mail($to, $subject, $body, $headers);
+  }
+
+}
+
+/************
+**
+** function for setting the status of a ticket
+**
+************/
+
+function uc_ticket_set_status($ticket_id, $status_id) {
+
+  $SQL = "UPDATE {uc_ticket_tickets} SET status = %d WHERE ticket_id = %d";
+  db_query($SQL, $status_id, $ticket_id);
+
+}
+
+/************
+**
+** function for stipping an email body
+** note: does nothing at present.
+**
+************/
+
+function uc_ticket_get_body($raw_body, $structure) {
+
+  //get encoding
+  foreach ($structure->parameters as $line) {
+    if ($line->attribute == 'CHARSET') {
+      $encoding = $line->value;
+      break;
+    }
+  }
+  //convert body to UTF8
+  $body = drupal_convert_to_utf8($raw_body, $encoding);
+
+  return $raw_body;
+
+}
+
+/************
+**
+** function for getting the signature of a user
+**
+************/
+
+function uc_ticket_get_signature($uid) {
+
+  $SQL = "SELECT text FROM {uc_ticket_signatures} WHERE uid = %d";
+  $signature = db_result(db_query($SQL, $uid));
+  
+  return $signature;
+
+}
+
+/************
+**
+** Theme the ticket template table in the ticket settings.
+**
+************/
+
+function theme_uc_ticket_templates_table($form) {
+  
+  $header = array(t('ID'), t('Name'), t('Remove'));
+  
+  foreach (element_children($form) as $template_id) {
+    $rows[] = array(
+      drupal_render($form[$template_id]['id']),
+      drupal_render($form[$template_id]['name']),
+      drupal_render($form[$template_id]['remove']),
+      drupal_render($form[$template_id]['edit']),
+    );
+  }
+
+  return theme('table', $header, $rows);
+
+}
+
+/************
+**
+** Theme the ticket status table in the ticket settings.
+**
+************/
+
+function theme_uc_ticket_statuses_table($form) {
+  
+  $header = array(t('ID'), t('Status'), t('Remove'));
+  
+  foreach (element_children($form) as $status_id) {
+    $rows[] = array(
+      drupal_render($form[$status_id]['id']),
+      drupal_render($form[$status_id]['status']),
+      drupal_render($form[$status_id]['remove']),
+    );
+  }
+
+  return theme('table', $header, $rows);
+
+}

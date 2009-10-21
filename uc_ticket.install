@@ -1,0 +1,256 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * UC_Ticket module install file.
+ */
+
+/**
+ *
+ * @return
+ *   The schema which contains the structure for the uc_ticket module's tables.
+ */
+
+function uc_ticket_schema() {
+  
+  $schema['uc_ticket_email'] = array(
+    'description' => 'A table that stores email account information.',
+    'fields' => array(
+      'email_id' => array(
+        'description' => 'identifier',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'protocol' => array(
+        'description' => 'The protocol used to fetch email.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => ''),
+      'server' => array(
+        'description' => 'The server name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'username' => array(
+        'description' => 'The username for this account.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'password' => array(
+        'description' => 'The password for this account.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'data' => array(
+        'description' => 'Storage for data pertaining to this account *NOT CURRENTLY USED*.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      ),
+    'primary key' => array('email_id'),
+  );
+
+  $schema['uc_ticket_signatures'] = array(
+    'description' => 'A table that stores user signatures.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'user id of the user to whom the signature belongs',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'text' => array(
+        'description' => 'The signature text.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => ''),
+      ),
+    'primary key' => array('uid'),
+  );
+
+  $schema['uc_ticket_status'] = array(
+    'description' => 'A table that stores ticket statuses.',
+    'fields' => array(
+      'status_id' => array(
+        'description' => 'identifier',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'status_name' => array(
+        'description' => 'The status name',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => ''),
+      ),
+    'primary key' => array('status_id'),
+  );
+
+  $schema['uc_ticket_templates'] = array(
+    'description' => 'A table that stores templates.',
+    'fields' => array(
+      'template_id' => array(
+        'description' => 'identifier',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'template_name' => array(
+        'description' => 'The template name',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'template_text' => array(
+        'description' => 'The template text that is inserted into the body of a ticket.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => ''),
+      'template_subject' => array(
+        'description' => 'The template subject that is inserted into the ticket subject',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      ),
+    'primary key' => array('template_id'),
+  );
+
+  $schema['uc_ticket_tickets'] = array(
+    'description' => 'A table that stores tickets.',
+    'fields' => array(
+      'ticket_id' => array(
+        'description' => 'identifier',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'created' => array(
+        'description' => 'The ticket created date',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'uid' => array(
+        'description' => 'The user id of the customer who created the ticket, or for whom the ticket was created for',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'email' => array(
+        'description' => 'The email adderess of the customer',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'order_id' => array(
+        'description' => 'The order id that is tied to this ticket',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'status' => array(
+        'description' => 'The status id of this ticket',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'assigned_to' => array(
+        'description' => '*NOT CURRENTLY USED*',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'updated' => array(
+        'description' => 'The last time this ticket was updated',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'title' => array(
+        'description' => 'The ticket title',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'category' => array(
+        'description' => 'The category id for this ticket',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      ),
+    'indexes' => array(
+      'order_id'   => array('order_id'),
+      'uid'        => array('uid'),
+    ),
+    'primary key' => array('ticket_id'),
+  );
+
+  $schema['uc_ticket_tickets_data'] = array(
+    'description' => 'A table that stores followups to tickets.',
+    'fields' => array(
+      'ticket_id' => array(
+        'description' => 'foreign key from uc_tickets_ticket table',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'created' => array(
+        'description' => 'The followup created date',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'delta' => array(
+        'description' => 'a mechanism for keeping order',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'email' => array(
+        'description' => 'The email adderess of the customer',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'subject' => array(
+        'description' => 'The followup subject',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'body' => array(
+        'description' => 'The body of the followup.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => ''),
+      ),
+    'indexes' => array(
+      'ticket_id'   => array('ticket_id'),
+    ),
+  );
+
+
+  return $schema;
+}
+
+
+/**
+ * Implementation of hook_install().
+ *
+ * Inserts the uc_ticket module's schema in the SQL database.
+ */
+function uc_ticket_install() {
+  drupal_install_schema('uc_ticket');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ *
+ * Remove the variables, nodes and schema corresponding to the uc_ticket module.
+ */
+function uc_ticket_uninstall() {
+  // Delete the variables we created.
+  variable_del('uc_ticket_default_filter');
+  variable_del('uc_ticket_default_sort');
+
+  drupal_uninstall_schema('uc_ticket');
+
+}
