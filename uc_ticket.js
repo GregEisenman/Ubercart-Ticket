@@ -1,4 +1,3 @@
-// $Id$
 
 $(document).ready(function(){
   $('#edit-template').change(function(){
