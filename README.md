@@ -1,6 +1,8 @@
 Ubercart Ticket is a ticketing/customer support system for Ubercart.
 ## Features:
 
+[![Join the chat at https://gitter.im/GregEisenman/Ubercart-Ticket](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/GregEisenman/Ubercart-Ticket?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 *   **Email integration** - Ubercart Ticket can be configured to collect emails from any number of email addresses and creates tickets from the content of the email
 *   **Integration with Ubercart orders** - an order pane is created on every order that lists all tickets for that order along with a link to create a new ticket with that order's information
 *   **Integration with the Contact module** - Ubercart Ticket adds an 'order picker' to the contact form so that customers can choose which order their question applies to and links that order with the ticket
